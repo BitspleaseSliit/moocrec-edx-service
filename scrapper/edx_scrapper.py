@@ -998,14 +998,6 @@ def main(course_url):
 
     change_openedx_site(args.platform)
 
-    # Query password, if not alredy passed by command line.
-    if not args.password:
-        args.password = getpass.getpass(stream=sys.stderr)
-
-    if not args.username or not args.password:
-        logging.error("You must supply username and password to log-in")
-        exit(ExitCode.MISSING_CREDENTIALS)
-
     # Prepare Headers
     headers = edx_get_headers()
 
@@ -1013,7 +1005,7 @@ def main(course_url):
     resp = edx_login(LOGIN_API, headers, args.username, args.password)
     if not resp.get('success', False):
         logging.error(resp.get('value', "Wrong Email or Password."))
-        exit(ExitCode.WRONG_EMAIL_OR_PASSWORD)
+        return False
 
     # Parse and select the available courses
     courses = get_courses_info(DASHBOARD, headers)
@@ -1076,6 +1068,8 @@ def main(course_url):
         save_urls_to_file(urls, args.export_filename)
     else:
         download(args, selections, filtered_units, headers)
+
+    return True
 
 
 # if __name__ == '__main__':
