@@ -982,7 +982,7 @@ def save_urls_to_file(urls, filename):
     file_.close()
 
 # 01
-def main():
+def main(course_url):
     """
     Main program function
     """
@@ -990,7 +990,7 @@ def main():
     
     args.username = USERNAME
     args.password = PASSWORD
-    args.course_urls = ["https://courses.edx.org/courses/course-v1:Microsoft+INF261x+2T2018/course/"]
+    args.course_urls = [course_url]
 
     file_formats = parse_file_formats(args)
 
@@ -1078,9 +1078,16 @@ def main():
         download(args, selections, filtered_units, headers)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+#     try:
+#         main()
+#     except KeyboardInterrupt:
+#         logging.warn("\n\nCTRL-C detected, shutting down....")
+#         sys.exit(ExitCode.OK)
+
+def scrapper(course_url):
     try:
-        main()
+        main(course_url)
     except KeyboardInterrupt:
         logging.warn("\n\nCTRL-C detected, shutting down....")
         sys.exit(ExitCode.OK)
