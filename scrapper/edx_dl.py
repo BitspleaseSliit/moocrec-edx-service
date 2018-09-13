@@ -32,6 +32,10 @@ from six.moves.urllib.request import (
 
 from _version import __version__
 
+# Login Details
+USERNAME = "bitpleasesliit@gmail.com"
+PASSWORD = "sliit_bitplease1"
+
 from common import (
     YOUTUBE_DL_CMD,
     DEFAULT_CACHE_FILENAME,
@@ -246,7 +250,7 @@ def parse_args():
     # optional
     parser.add_argument('-u',
                         '--username',
-                        required=True,
+                        # required=True,
                         action='store',
                         help='your edX username (email)')
 
@@ -984,6 +988,8 @@ def main():
     """
     args = parse_args()
     
+    args.username = USERNAME
+    args.password = PASSWORD
     args.course_urls = ["https://courses.edx.org/courses/course-v1:Microsoft+INF261x+2T2018/course/"]
 
     file_formats = parse_file_formats(args)
