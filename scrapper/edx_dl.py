@@ -983,8 +983,12 @@ def main():
     Main program function
     """
     args = parse_args()
-    logging.info('edx_dl version %s', __version__)
+    
+    args.course_urls = ["https://courses.edx.org/courses/course-v1:Microsoft+INF261x+2T2018/course/"]
+
     file_formats = parse_file_formats(args)
+
+    print(args)
 
     change_openedx_site(args.platform)
 
