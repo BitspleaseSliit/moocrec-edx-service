@@ -3,7 +3,7 @@ from bson.objectid import ObjectId
 from dbConnection import ( db )
 
 
-class Courses:
+class EdxCourses:
 
     # self.courses = db["test_courses"]
 
@@ -13,7 +13,7 @@ class Courses:
     def getAll(self):
         courses_array = []
         try:
-            for course in self.courses.find({"logo": "coursera"}):
+            for course in self.courses.find({"logo": "edx"}):
                 # print(course["_id"])
                 courses_array.append(course)
             return courses_array
