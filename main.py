@@ -23,7 +23,7 @@ if __name__ == '__main__':
     courses = EdxCourses()
     print(courses.getDownloadCoursesPaths())
     download_courses = courses.getDownlodCourses()
-    scrapper("https://courses.edx.org/courses/course-v1:UCSanDiegoX+DSE200x+3T2018/course/")
+    # scrapper("https://courses.edx.org/courses/course-v1:UCSanDiegoX+DSE200x+3T2018/course/")
     for course in download_courses:
         if scrapper(course["courseUrl"]):
 

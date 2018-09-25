@@ -1,0 +1,4 @@
+{
+  "DB_CLIENT" : "mongodb://bitplease10:bitplease10@ds115971.mlab.com:15971/moocrec",
+  "DATABASE" : "moocrec"
+}

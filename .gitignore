@@ -104,7 +104,7 @@ venv.bak/
 .mypy_cache/
 
 # config
-config.json
+# config.json
 
 # Downloaded
 Downloaded/
