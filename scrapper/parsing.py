@@ -11,7 +11,7 @@ from datetime import timedelta, datetime
 from six.moves import html_parser
 from bs4 import BeautifulSoup as BeautifulSoup_
 
-from common import Course, Section, SubSection, Unit, Video
+from .common import Course, Section, SubSection, Unit, Video
 
 
 # Force use of bs4 with html.parser
@@ -19,9 +19,7 @@ BeautifulSoup = lambda page: BeautifulSoup_(page, 'html.parser')
 
 
 def edx_json2srt(o):
-    """
-    Transform the dict 'o' into the srt subtitles format
-    """
+
     if o == {}:
         return ''
 
@@ -47,18 +45,7 @@ def edx_json2srt(o):
 
 
 class PageExtractor(object):
-    """
-    Base class for PageExtractor
-    Every subclass can represent a different layout for an OpenEdX site.
-    They should implement the given methods.
 
-    Usage:
-
-      >>> import parsing
-      >>> d = parsing.SubclassFromPageExtractor()
-      >>> units = d.extract_units_from_html(page, BASE_URL)
-      >>> ...
-    """
 
     def extract_units_from_html(self, page, BASE_URL, file_formats):
         """
@@ -82,13 +69,7 @@ class PageExtractor(object):
 class ClassicEdXPageExtractor(PageExtractor):
 
     def extract_units_from_html(self, page, BASE_URL, file_formats):
-        """
-        Extract Units from the html of a subsection webpage as a list of
-        resources
-        """
-        # in this function we avoid using beautifulsoup for performance reasons
-        # parsing html with regular expressions is really nasty, don't do this if
-        # you don't need to !
+
         re_units = re.compile('(<div?[^>]id="seq_contents_\d+".*?>.*?<\/div>)',
                               re.DOTALL)
         units = []
@@ -153,24 +134,14 @@ class ClassicEdXPageExtractor(PageExtractor):
         return available_subs_url, sub_template_url
 
     def extract_mp4_urls(self, text):
-        """
-        Looks for available links to the mp4 version of the videos
-        """
-        # mp4 urls may be in two places, in the field data-sources, and as <a>
-        # refs This regex tries to match all the appearances, however we
-        # exclude the ';' # character in the urls, since it is used to separate
-        # multiple urls in one string, however ';' is a valid url name
-        # character, but it is not really common.
+
         re_mp4_urls = re.compile(r'(?:(https?://[^;]*?\.mp4))')
         mp4_urls = list(set(re_mp4_urls.findall(text)))
 
         return mp4_urls
 
     def extract_resources_urls(self, text, BASE_URL, file_formats):
-        """
-        Extract resources looking for <a> references in the webpage and
-        matching the given file formats
-        """
+
         formats = '|'.join(file_formats)
         re_resources_urls = re.compile(r'&lt;a href=(?:&#34;|")([^"&]*.(?:' + formats + '))(?:&#34;|")')
         resources_urls = []
@@ -191,9 +162,7 @@ class ClassicEdXPageExtractor(PageExtractor):
         return resources_urls
 
     def extract_sections_from_html(self, page, BASE_URL):
-        """
-        Extract sections (Section->SubSection) from the html page
-        """
+
         def _make_url(section_soup):  # FIXME: Extract from here and test
             try:
                 return BASE_URL + section_soup.ul.a['href']
@@ -235,18 +204,9 @@ class ClassicEdXPageExtractor(PageExtractor):
         return sections
 
     def extract_courses_from_html(self, page, BASE_URL):
-        """
-        Extracts courses (Course) from the html page
-        """
+
         soup = BeautifulSoup(page)
 
-        # First, try with new course structure (as of December 2017).  If
-        # that doesn't work, we fallback to an older course structure
-        # (released with version 0.1.6). If even that doesn't work, then we
-        # try with the oldest course structure (that was current before
-        # version 0.1.6).
-        #
-        # rbrito---This code is ugly.
 
         courses_soup = soup.find_all('article', 'course')
         if len(courses_soup) == 0:
@@ -296,11 +256,7 @@ class CurrentEdXPageExtractor(ClassicEdXPageExtractor):
             if match_video_youtube_url is not None:
                 video_id = match_video_youtube_url.group(1)
                 video_youtube_url = 'https://youtube.com/watch?v=' + video_id
-            # notice that the concrete languages come now in
-            # so we can eventually build the full urls here
-            # subtitles_download_urls = {sub_lang:
-            #                            BASE_URL + metadata['transcriptTranslationUrl'].replace('__lang__', sub_lang)
-            #                            for sub_lang in metadata['transcriptLanguages'].keys()}
+
             available_subs_url = BASE_URL + metadata['transcriptAvailableTranslationsUrl']
             sub_template_url = BASE_URL + metadata['transcriptTranslationUrl'].replace('__lang__', '%s')
             mp4_urls = [url for url in metadata['sources'] if url.endswith('.mp4')]
@@ -317,14 +273,14 @@ class CurrentEdXPageExtractor(ClassicEdXPageExtractor):
         """
         Extract sections (Section->SubSection) from the html page
         """
-        def _make_url(section_soup):  # FIXME: Extract from here and test
+        def _make_url(section_soup):  
             try:
                 return BASE_URL + section_soup.div.div.a['href']
             except AttributeError:
                 # Section might be empty and contain no links
                 return None
 
-        def _get_section_name(section_soup):  # FIXME: Extract from here and test
+        def _get_section_name(section_soup):  
             try:
                 return section_soup['aria-label'][:-8] # -8 cuts the submenu word
             except AttributeError:
@@ -359,22 +315,15 @@ class CurrentEdXPageExtractor(ClassicEdXPageExtractor):
 
 
 class NewEdXPageExtractor(CurrentEdXPageExtractor):
-    """
-    A new page extractor for the latest changes in layout of edx
-    """
 
     def extract_sections_from_html(self, page, BASE_URL):
-        """
-        Extract sections (Section->SubSection) from the html page
-        """
-        def _make_url(section_soup):  # FIXME: Extract from here and test
+        def _make_url(section_soup):  
             try:
                 return None
             except AttributeError:
-                # Section might be empty and contain no links
                 return None
 
-        def _get_section_name(section_soup):  # FIXME: Extract from here and test
+        def _get_section_name(section_soup): 
             try:
                 return section_soup.button.h3.string.strip()
             except AttributeError:
@@ -385,7 +334,6 @@ class NewEdXPageExtractor(CurrentEdXPageExtractor):
                 subsections_soup = section_soup.find_all('li', class_='vertical outline-item focusable')
             except AttributeError:
                 return []
-            # FIXME correct extraction of subsection.name (unicode)
             subsections = [SubSection(position=i,
                                       url=s.a['href'],
                                       name=s.a.div.div.string.strip())
@@ -409,9 +357,6 @@ class NewEdXPageExtractor(CurrentEdXPageExtractor):
 
 
 def get_page_extractor(url):
-    """
-    factory method for page extractors
-    """
     if (
         url.startswith('https://courses.edx.org') or
         url.startswith('https://mitxpro.mit.edu')

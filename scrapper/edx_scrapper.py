@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
 
 """
-Main module for the edx-dl downloader.
-It corresponds to the cli interface
+sajeeva - edx main
 """
 
 import argparse
@@ -30,13 +28,13 @@ from six.moves.urllib.request import (
     urlretrieve,
 )
 
-from _version import __version__
+from ._version import __version__
 
 # Login Details
 USERNAME = "bitpleasesliit@gmail.com"
 PASSWORD = "sliit_bitplease1"
 
-from common import (
+from .common import (
     YOUTUBE_DL_CMD,
     DEFAULT_CACHE_FILENAME,
     Unit,
@@ -44,12 +42,12 @@ from common import (
     ExitCode,
     DEFAULT_FILE_FORMATS,
 )
-from parsing import (
+from .parsing import (
     edx_json2srt,
     get_page_extractor,
     is_youtube_url,
 )
-from utils import (
+from .utils import (
     clean_filename,
     directory_name,
     execute_command,
@@ -201,7 +199,7 @@ def edx_get_subtitle(url, headers,
     subtitles are available.
     """
     try:
-        if ';' in url:  # non-JSON format (e.g. Stanford)
+        if ';' in url:  
             return get_page_contents(url, headers)
         else:
             json_object = get_page_contents_as_json(url, headers)
@@ -447,10 +445,7 @@ def extract_units(url, headers, file_formats):
 
 
 def extract_all_units_in_sequence(urls, headers, file_formats):
-    """
-    Returns a dict of all the units in the selected_sections: {url, units}
-    sequentially, this is clearer for debug purposes
-    """
+
     logging.info('Extracting all units information in sequentially.')
     logging.debug('urls: ' + str(urls))
 
@@ -461,10 +456,7 @@ def extract_all_units_in_sequence(urls, headers, file_formats):
 
 
 def extract_all_units_in_parallel(urls, headers, file_formats):
-    """
-    Returns a dict of all the units in the selected_sections: {url, units}
-    in parallel
-    """
+
     logging.info('Extracting all units information in parallel.')
     logging.debug('urls: ' + str(urls))
 
@@ -479,9 +471,7 @@ def extract_all_units_in_parallel(urls, headers, file_formats):
 
 
 def _display_sections_menu(course, sections):
-    """
-    List the weeks for the given course.
-    """
+
     num_sections = len(sections)
 
     logging.info('%s [%s] has %d sections so far', course.name, course.id, num_sections)
@@ -490,13 +480,7 @@ def _display_sections_menu(course, sections):
 
 
 def _filter_sections(index, sections):
-    """
-    Get the sections for the given index.
 
-    If the index is not valid (that is, None, a non-integer, a negative
-    integer, or an integer above the number of the sections), we choose all
-    sections.
-    """
     num_sections = len(sections)
 
     logging.info('Filtering sections')
@@ -518,9 +502,7 @@ def _filter_sections(index, sections):
 
 
 def _display_sections(sections):
-    """
-    Displays a tree of section(s) and subsections
-    """
+
     logging.info('Downloading %d section(s)', len(sections))
 
     for section in sections:
@@ -530,9 +512,7 @@ def _display_sections(sections):
 
 
 def parse_courses(args, available_courses):
-    """
-    Parses courses options and returns the selected_courses.
-    """
+
     if args.list_courses:
         _display_courses(available_courses)
         exit(ExitCode.OK)
@@ -552,10 +532,7 @@ def parse_courses(args, available_courses):
 
 
 def parse_sections(args, selections):
-    """
-    Parses sections options and returns selections filtered by
-    selected_sections
-    """
+
     if args.list_sections:
         for selected_course, selected_sections in selections.items():
             _display_sections_menu(selected_course, selected_sections)
@@ -571,9 +548,7 @@ def parse_sections(args, selections):
 
 
 def parse_file_formats(args):
-    """
-    parse options for file formats and builds the array to be used
-    """
+
     file_formats = DEFAULT_FILE_FORMATS
 
     if args.list_file_formats:
@@ -592,9 +567,7 @@ def parse_file_formats(args):
 
 
 def _display_selections(selections):
-    """
-    Displays the course, sections and subsections to be downloaded
-    """
+
     for selected_course, selected_sections in selections.items():
         logging.info('Downloading %s [%s]',
                      selected_course.name, selected_course.id)
@@ -602,9 +575,7 @@ def _display_selections(selections):
 
 
 def parse_units(all_units):
-    """
-    Parses units options and corner cases
-    """
+
     flat_units = [unit for units in all_units.values() for unit in units]
     if len(flat_units) < 1:
         logging.warn('No downloadable video found.')
@@ -612,9 +583,7 @@ def parse_units(all_units):
 
 
 def get_subtitles_urls(available_subs_url, sub_template_url, headers):
-    """
-    Request the available subs and builds the urls to download subs
-    """
+
     if available_subs_url is not None and sub_template_url is not None:
         try:
             available_subs = get_page_contents_as_json(available_subs_url,
@@ -638,10 +607,7 @@ def get_subtitles_urls(available_subs_url, sub_template_url, headers):
 
 
 def _build_subtitles_downloads(video, target_dir, filename_prefix, headers):
-    """
-    Builds a dict {url: filename} for the subtitles, based on the
-    filename_prefix of the video
-    """
+
     downloads = {}
     filename = get_filename_from_prefix(target_dir, filename_prefix)
 
@@ -652,9 +618,6 @@ def _build_subtitles_downloads(video, target_dir, filename_prefix, headers):
         logging.warn('No subtitles downloaded for %s', filename_prefix)
         return downloads
 
-    # This is a fix for the case of retrials because the extension would be
-    # .lang (from .lang.srt), so the matching does not detect correctly the
-    # subtitles name
     re_is_subtitle = re.compile(r'(.*)(?:\.[a-z]{2})')
     match_subtitle = re_is_subtitle.match(filename)
     if match_subtitle:
@@ -671,11 +634,7 @@ def _build_subtitles_downloads(video, target_dir, filename_prefix, headers):
 
 
 def _build_url_downloads(urls, target_dir, filename_prefix):
-    """
-    Builds a dict {url: filename} for the given urls
-    If it is a youtube url it uses the valid template for youtube-dl
-    otherwise just takes the name of the file from the url
-    """
+
     downloads = {url:
                  _build_filename_from_url(url, target_dir, filename_prefix)
                  for url in urls}
@@ -683,9 +642,7 @@ def _build_url_downloads(urls, target_dir, filename_prefix):
 
 
 def _build_filename_from_url(url, target_dir, filename_prefix):
-    """
-    Builds the appropriate filename for the given args
-    """
+
     if is_youtube_url(url):
         filename_template = filename_prefix + "-%(title)s-%(id)s.%(ext)s"
         filename = os.path.join(target_dir, filename_template)
@@ -698,29 +655,14 @@ def _build_filename_from_url(url, target_dir, filename_prefix):
 
 
 def download_url(url, filename, headers, args):
-    """
-    Downloads the given url in filename.
-    """
 
     if is_youtube_url(url):
         download_youtube_url(url, filename, headers, args)
     else:
         import ssl
         import requests
-        # FIXME: Ugly hack for coping with broken SSL sites:
-        # https://www.cs.duke.edu/~angl/papers/imc10-cloudcmp.pdf
-        #
-        # We should really ask the user if they want to stop the downloads
-        # or if they are OK proceeding without verification.
-        #
-        # Note that skipping verification by default could be a problem for
-        # people's lives if they happen to live ditatorial countries.
-        #
-        # Note: The mess with various exceptions being caught (and their
-        # order) is due to different behaviors in different Python versions
-        # (e.g., 2.7 vs. 3.4).
+        
         try:
-            # mitxpro fix for downloading compressed files
             if 'zip' in url and 'mitxpro' in url:
                 urlretrieve(url, filename)
             else:
@@ -738,9 +680,7 @@ def download_url(url, filename, headers, args):
 
 
 def download_youtube_url(url, filename, headers, args):
-    """
-    Downloads a youtube URL and applies the filters from args
-    """
+
     logging.info('Downloading video with URL %s from YouTube.', url)
     video_format_option = args.format + '/mp4' if args.format else 'mp4'
     cmd = YOUTUBE_DL_CMD + ['-o', filename, '-f', video_format_option]
@@ -754,9 +694,7 @@ def download_youtube_url(url, filename, headers, args):
 
 
 def download_subtitle(url, filename, headers, args):
-    """
-    Downloads the subtitle from the url and transforms it to the srt format
-    """
+
     subs_string = edx_get_subtitle(url, headers)
     if subs_string:
         full_filename = os.path.join(os.getcwd(), filename)
@@ -765,10 +703,7 @@ def download_subtitle(url, filename, headers, args):
 
 
 def skip_or_download(downloads, headers, args, f=download_url):
-    """
-    downloads url into filename using download function f,
-    if filename exists it skips
-    """
+
     for url, filename in downloads.items():
         if os.path.exists(filename):
             logging.info('[skipping] %s => %s', url, filename)
@@ -792,9 +727,6 @@ def download_video(video, args, target_dir, filename_prefix, headers):
                                                      filename_prefix)
             skip_or_download(youtube_downloads, headers, args)
 
-    # the behavior with subtitles is different, since the subtitles don't know
-    # the destination name until the video is downloaded with youtube-dl
-    # also, subtitles must be transformed from the raw data to the srt format
     if args.subtitles:
         sub_downloads = _build_subtitles_downloads(video, target_dir,
                                                    filename_prefix, headers)
@@ -802,16 +734,11 @@ def download_video(video, args, target_dir, filename_prefix, headers):
 
 
 def download_unit(unit, args, target_dir, filename_prefix, headers):
-    """
-    Downloads the urls in unit based on args in the given target_dir
-    with filename_prefix
-    """
+
     if len(unit.videos) == 1:
         download_video(unit.videos[0], args, target_dir, filename_prefix,
                        headers)
     else:
-        # we change the filename_prefix to avoid conflicts when downloading
-        # subtitles
         for i, video in enumerate(unit.videos, 1):
             new_prefix = filename_prefix + ('-%02d' % i)
             download_video(video, args, target_dir, new_prefix, headers)
@@ -822,14 +749,8 @@ def download_unit(unit, args, target_dir, filename_prefix, headers):
 
 
 def download(args, selections, all_units, headers):
-    """
-    Downloads all the resources based on the selections
-    """
-    logging.info("Output directory: " + args.output_dir)
 
-    # Download Videos
-    # notice that we could iterate over all_units, but we prefer to do it over
-    # sections/subsections to add correct prefixes and show nicer information.
+    logging.info("Output directory: " + args.output_dir)
 
     for selected_course, selected_sections in selections.items():
         coursename = directory_name(selected_course.name)
@@ -850,10 +771,7 @@ def download(args, selections, all_units, headers):
 
 
 def remove_repeated_urls(all_units):
-    """
-    Removes repeated urls from the units, it does not consider subtitles.
-    This is done to avoid repeated downloads.
-    """
+
     existing_urls = set()
     filtered_units = {}
     for url, units in all_units.items():
@@ -861,8 +779,6 @@ def remove_repeated_urls(all_units):
         for unit in units:
             videos = []
             for video in unit.videos:
-                # we don't analyze the subtitles for repetition since
-                # their size is negligible for the goal of this function
                 video_youtube_url = None
                 if video.video_youtube_url not in existing_urls:
                     video_youtube_url = video.video_youtube_url
@@ -887,10 +803,6 @@ def remove_repeated_urls(all_units):
 
 
 def num_urls_in_units_dict(units_dict):
-    """
-    Counts the number of urls in a all_units dict, it ignores subtitles from
-    its counting.
-    """
     num_urls = 0
 
     for units in units_dict.values():
@@ -908,15 +820,6 @@ def num_urls_in_units_dict(units_dict):
 def extract_all_units_with_cache(all_urls, headers, file_formats,
                                  filename=DEFAULT_CACHE_FILENAME,
                                  extractor=extract_all_units_in_parallel):
-    """
-    Extracts the units which are not in the cache and extract their resources
-    returns the full list of units (cached+new)
-
-    The cache is used to improve speed because it avoids requesting already
-    known (and extracted) objects from URLs. This is useful to follow courses
-    week by week since we won't parse the already known subsections/units,
-    additionally it speeds development of code unrelated to extraction.
-    """
     cached_units = {}
 
     if os.path.exists(filename):
@@ -935,9 +838,6 @@ def extract_all_units_with_cache(all_urls, headers, file_formats,
 
 
 def write_units_to_cache(units, filename=DEFAULT_CACHE_FILENAME):
-    """
-    writes units to cache
-    """
     logging.info('writing %d urls to cache [%s]', len(units.keys()),
                  filename)
     with open(filename, 'wb') as f:
@@ -945,11 +845,6 @@ def write_units_to_cache(units, filename=DEFAULT_CACHE_FILENAME):
 
 
 def extract_urls_from_units(all_units, format_):
-    """
-    Extract urls from units into a set of strings. Format is specified by
-    the user. The original purpose of this function is to export urls into
-    a file for external downloader.
-    """
     all_urls = set()
 
     # Collect all urls into a set to remove duplicates
@@ -972,20 +867,12 @@ def extract_urls_from_units(all_units, format_):
 
 
 def save_urls_to_file(urls, filename):
-    """
-    Save urls to file. Filename is specified by the user. The original
-    purpose of this function is to export urls into a file for external
-    downloader.
-    """
     file_ = sys.stdout if filename == '-' else open(filename, 'w')
     file_.writelines(urls)
     file_.close()
 
 # 01
 def main(course_url):
-    """
-    Main program function
-    """
     args = parse_args()
     
     args.username = USERNAME
@@ -1051,10 +938,6 @@ def main(course_url):
     if args.cache:
         write_units_to_cache(all_units)
 
-    # This removes all repeated important urls
-    # FIXME: This is not the best way to do it but it is the simplest, a
-    # better approach will be to create symbolic or hard links for the repeated
-    # units to avoid losing information
     filtered_units = remove_repeated_urls(all_units)
     num_all_urls = num_urls_in_units_dict(all_units)
     num_filtered_urls = num_urls_in_units_dict(filtered_units)
@@ -1070,14 +953,6 @@ def main(course_url):
         download(args, selections, filtered_units, headers)
 
     return True
-
-
-# if __name__ == '__main__':
-#     try:
-#         main()
-#     except KeyboardInterrupt:
-#         logging.warn("\n\nCTRL-C detected, shutting down....")
-#         sys.exit(ExitCode.OK)
 
 def scrapper(course_url):
     try:

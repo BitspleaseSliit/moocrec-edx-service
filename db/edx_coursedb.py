@@ -1,6 +1,6 @@
 import pymongo
 from bson.objectid import ObjectId
-from dbConnection import ( db )
+from .dbConnection import ( db )
 
 
 class EdxCourses:
@@ -43,6 +43,16 @@ class EdxCourses:
         except pymongo.errors.PyMongoError as e:
             print(e)
             return False
+
+    def updateComplexityLevel(self, complexity_level, course):
+        try:
+            select_query = { "_id": ObjectId(course["_id"])}
+            insert_value = { "$set": { "ComplexityLevel": complexity_level} }
+            result = self.courses.update_one(select_query, insert_value)
+            return result.matched_count > 0 
+        except pymongo.errors.PyMongoError as e:
+            print(e)
+            return False 
 
     def updateAbstractTopics(self, abstract_topics, course):
         try:
